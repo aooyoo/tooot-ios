@@ -2,6 +2,7 @@ import FeatherNames from '@expo/vector-icons/build/vendor/react-native-vector-ic
 import Feather from '@expo/vector-icons/Feather'
 import React from 'react'
 import { AccessibilityProps, StyleProp, View, ViewStyle } from 'react-native'
+import { IS_IOS_26_OR_LATER } from '@utils/styles/ios26'
 
 export type IconName = keyof typeof FeatherNames
 
@@ -36,7 +37,12 @@ const Icon: React.FC<Props> = ({
         }
       ]}
     >
-      <Feather name={name} size={size} color={color} />
+      <Feather
+        name={name}
+        size={size}
+        color={color}
+        style={IS_IOS_26_OR_LATER ? { lineHeight: size, textAlign: 'center' } : undefined}
+      />
       {crossOut ? (
         <View
           style={{
