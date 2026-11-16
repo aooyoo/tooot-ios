@@ -46,6 +46,14 @@ jobs:
         run: |
           bundle exec pod install
 
+      - name: Build JS bundle (Metro/Hermes)
+        env:
+          ENVIRONMENT: release
+        run: |
+          npx expo export:embed --platform ios --dev false --entry-file index.js \
+            --bundle-output ios/main.jsbundle --assets-dest "$RUNNER_TEMP/jsbundle-assets"
+          ls -lh ios/main.jsbundle
+
       - name: Archive (no code signing)
         working-directory: ios
         env:
@@ -69,8 +77,11 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/Payload"
           cp -R "$RUNNER_TEMP"/tooot.xcarchive/Products/Applications/*.app "$RUNNER_TEMP/Payload/"
+          cp ios/main.jsbundle "$RUNNER_TEMP/Payload/toot.app/main.jsbundle" 2>/dev/null || cp ../ios/main.jsbundle "$RUNNER_TEMP/Payload/toot.app/main.jsbundle"
+          if [ -d "$RUNNER_TEMP/jsbundle-assets" ]; then cp -R "$RUNNER_TEMP"/jsbundle-assets/* "$RUNNER_TEMP/Payload/toot.app/" 2>/dev/null || true; fi
           cd "$RUNNER_TEMP"
           zip -qry tooot-unsigned.ipa Payload
+          unzip -l tooot-unsigned.ipa | grep -i jsbundle
           ls -lh tooot-unsigned.ipa
 
       - uses: actions/upload-artifact@v4
