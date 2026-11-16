@@ -50,7 +50,7 @@ jobs:
         env:
           ENVIRONMENT: release
         run: |
-          npx expo export:embed --platform ios --dev false --entry-file index.js \
+          npx react-native bundle --platform ios --dev false --entry-file index.js \
             --bundle-output ios/main.jsbundle --assets-dest "$RUNNER_TEMP/jsbundle-assets"
           ls -lh ios/main.jsbundle
 
