@@ -21,10 +21,19 @@ jobs:
           corepack enable
           yarn install
 
+      - name: Setup Ruby (3.2, matches 2024-era project)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
       - name: Install Ruby gems (CocoaPods)
         run: |
           bundle config set --local path vendor/bundle
           bundle install --jobs 4
+
+      - name: Show available Xcode versions
+        run: ls -d /Applications/Xcode*.app || true
 
       - name: Pod install
         working-directory: ios
