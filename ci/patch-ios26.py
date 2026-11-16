@@ -14,3 +14,16 @@ if old in s:
     print('patched LocalizationModule.swift')
 else:
     print('pattern not found (already patched?)')
+
+# The Xcode "Bundle React Native code and images" phase calls sentry-cli when
+# ios/sentry.properties exists. We removed @sentry/react-native, so provide a
+# no-op stub: crash reporting is not used in this personal build.
+import os, stat
+cli = pathlib.Path('node_modules/@sentry/cli/bin/sentry-cli')
+cli.parent.mkdir(parents=True, exist_ok=True)
+if not cli.exists():
+    cli.write_text('#!/bin/sh\nexit 0\n')
+    cli.chmod(cli.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    print('created no-op sentry-cli stub')
+else:
+    print('sentry-cli already present')
