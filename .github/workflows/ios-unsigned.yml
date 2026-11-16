@@ -1,0 +1,66 @@
+name: ios-unsigned
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ ios-unsigned ]
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install JS dependencies
+        run: |
+          corepack enable
+          yarn install
+
+      - name: Install Ruby gems (CocoaPods)
+        run: |
+          bundle config set --local path vendor/bundle
+          bundle install --jobs 4
+
+      - name: Pod install
+        working-directory: ios
+        env:
+          NO_FLIPPER: '1'
+        run: bundle exec pod install
+
+      - name: Archive (no code signing)
+        working-directory: ios
+        env:
+          ENVIRONMENT: release
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace tooot.xcworkspace \
+            -scheme tooot \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/tooot.xcarchive" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_ENTITLEMENTS="" \
+            archive
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$RUNNER_TEMP"/tooot.xcarchive/Products/Applications/*.app "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -qry tooot-unsigned.ipa Payload
+          ls -lh tooot-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tooot-unsigned-ipa
+          path: ${{ runner.temp }}/tooot-unsigned.ipa
+          if-no-files-found: error
