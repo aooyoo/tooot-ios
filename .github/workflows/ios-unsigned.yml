@@ -44,7 +44,8 @@ jobs:
         working-directory: ios
         env:
           NO_FLIPPER: '1'
-        run: bundle exec pod install
+        run: |
+          bundle exec pod install || bundle exec pod update Sentry/HybridSDK SentryPrivate
 
       - name: Archive (no code signing)
         working-directory: ios
