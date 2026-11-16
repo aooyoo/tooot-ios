@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/react-native'
+import * as Sentry from '../../vendor/sentry-stub'
 import { isDevelopment } from '@utils/helpers/checkEnvironment'
 import log from './log'
 

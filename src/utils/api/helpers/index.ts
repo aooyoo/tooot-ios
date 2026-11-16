@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/react-native'
+import * as Sentry from '../../../vendor/sentry-stub'
 import { GLOBAL } from '@utils/storage'
 import chalk from 'chalk'
 import Constants from 'expo-constants'

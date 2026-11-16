@@ -19,12 +19,8 @@ jobs:
       - name: Install JS dependencies
         run: |
           corepack enable
-          yarn install
+          YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
 
-      - name: Bump Sentry for Xcode 26 libc++ compatibility
-        run: |
-          YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up @sentry/react-native@5.36.0 -E || true
-          grep -n '@sentry/react-native' package.json || true
 
       - name: Setup Ruby (3.2, matches 2024-era project)
         uses: ruby/setup-ruby@v1
@@ -45,7 +41,7 @@ jobs:
         env:
           NO_FLIPPER: '1'
         run: |
-          bundle exec pod install || bundle exec pod update Sentry/HybridSDK SentryPrivate
+          bundle exec pod install
 
       - name: Archive (no code signing)
         working-directory: ios

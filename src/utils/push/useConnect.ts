@@ -1,6 +1,6 @@
 import { displayMessage } from '@components/Message'
 import { getPushPath, getPushendpoint } from '@screens/Tabs/Me/Push'
-import * as Sentry from '@sentry/react-native'
+import * as Sentry from '../../vendor/sentry-stub'
 import { useQuery } from '@tanstack/react-query'
 import apiGeneral from '@utils/api/general'
 import apiInstance from '@utils/api/instance'
