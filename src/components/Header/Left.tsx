@@ -1,7 +1,6 @@
 import Icon, { IconName } from '@components/Icon'
 import CustomText from '@components/Text'
 import { useNavigation } from '@react-navigation/native'
-import { ios26HeaderButtonFix } from '@utils/styles/ios26'
 import { StyleConstants } from '@utils/styles/constants'
 import { useTheme } from '@utils/styles/ThemeManager'
 import React from 'react'
@@ -53,7 +52,6 @@ const HeaderLeft: React.FC<Props> = ({
         minHeight: 44,
         minWidth: 44,
         marginLeft: native ? -StyleConstants.Spacing.S : StyleConstants.Spacing.S,
-        ...ios26HeaderButtonFix(native, 'left'),
         ...(type === undefined && {
           borderRadius: 99
         }),

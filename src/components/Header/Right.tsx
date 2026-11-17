@@ -3,7 +3,6 @@ import { Loading } from '@components/Loading'
 import CustomText from '@components/Text'
 import { StyleConstants } from '@utils/styles/constants'
 import { useTheme } from '@utils/styles/ThemeManager'
-import { ios26HeaderButtonFix } from '@utils/styles/ios26'
 import React from 'react'
 import { AccessibilityProps, Pressable, View } from 'react-native'
 
@@ -101,7 +100,6 @@ const HeaderRight: React.FC<Props> = ({
         minHeight: 44,
         minWidth: 44,
         marginRight: native ? -StyleConstants.Spacing.S : StyleConstants.Spacing.S,
-        ...ios26HeaderButtonFix(native, 'right'),
         ...(type === undefined && { borderRadius: 99 }),
         ...(type === 'text' && {
           paddingHorizontal: StyleConstants.Spacing.S
