@@ -208,8 +208,65 @@ const TabMePush: React.FC = () => {
   const pushPath = getPushPath({ expoToken, domain, accountId })
   const accountFull = `@${accountAcct}@${accountDomain}`
 
+
+  const barkSection = () => (
+            <MenuContainer>
+              <MenuRow
+                title='Bark 推送'
+                description='自签名安装没有 APNs，用 Bark 接收 Mastodon 通知（由 Worker 每分钟轮询）'
+                switchValue={!!bark.enabled}
+                switchOnValueChange={async () => {
+                  if (bark.enabled) {
+                    await barkDisable()
+                  } else {
+                    await barkSubscribe()
+                  }
+                }}
+              />
+              <View
+                style={{
+                  paddingHorizontal: StyleConstants.Spacing.Global.PagePadding,
+                  paddingBottom: StyleConstants.Spacing.M
+                }}
+              >
+                <TextInput
+                  value={barkDraft}
+                  onChangeText={setBarkDraft}
+                  placeholder='https://api.day.app/你的key'
+                  placeholderTextColor={colors.secondary}
+                  autoCapitalize='none'
+                  autoCorrect={false}
+                  keyboardType='url'
+                  style={{
+                    color: colors.primaryDefault,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.backgroundOverlayDefault,
+                    paddingVertical: StyleConstants.Spacing.S,
+                    marginBottom: StyleConstants.Spacing.S
+                  }}
+                />
+                <View style={{ flexDirection: 'row', gap: StyleConstants.Spacing.S }}>
+                  <Button type='text' size='S' content='保存并启用' onPress={barkSubscribe} />
+                  <Button type='text' size='S' content='发送测试' onPress={() => barkTest()} />
+                  {bark.enabled ? (
+                    <Button type='text' size='S' destructive content='关闭' onPress={barkDisable} />
+                  ) : null}
+                </View>
+                {barkStatus ? (
+                  <CustomText
+                    fontStyle='S'
+                    style={{ color: colors.secondary, marginTop: StyleConstants.Spacing.XS }}
+                  >
+                    {barkStatus}
+                  </CustomText>
+                ) : null}
+              </View>
+            </MenuContainer>
+  )
+
   return appsQuery.isFetched ? (
     <ScrollView>
+      {barkSection()}
       {!!appsQuery.data?.vapid_key ? (
         <>
           {!!expoToken?.length || (!expoToken?.length && !pushEnabled) ? (
@@ -360,66 +417,13 @@ const TabMePush: React.FC = () => {
               </MenuContainer>
               <MenuContainer children={alerts()} />
               <MenuContainer children={adminAlerts()} />
-              <MenuContainer>
-                <MenuRow
-                  title='Bark 推送'
-                  description='自签名安装没有 APNs，用 Bark 接收 Mastodon 通知（由 Worker 每分钟轮询）'
-                  switchValue={!!bark.enabled}
-                  switchOnValueChange={async () => {
-                    if (bark.enabled) {
-                      await barkDisable()
-                    } else {
-                      await barkSubscribe()
-                    }
-                  }}
-                />
-                <View
-                  style={{
-                    paddingHorizontal: StyleConstants.Spacing.Global.PagePadding,
-                    paddingBottom: StyleConstants.Spacing.M
-                  }}
-                >
-                  <TextInput
-                    value={barkDraft}
-                    onChangeText={setBarkDraft}
-                    placeholder='https://api.day.app/你的key'
-                    placeholderTextColor={colors.secondary}
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                    keyboardType='url'
-                    style={{
-                      color: colors.primaryDefault,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.backgroundOverlayDefault,
-                      paddingVertical: StyleConstants.Spacing.S,
-                      marginBottom: StyleConstants.Spacing.S
-                    }}
-                  />
-                  <View style={{ flexDirection: 'row', gap: StyleConstants.Spacing.S }}>
-                    <Button type='text' size='S' content='保存并启用' onPress={barkSubscribe} />
-                    <Button type='text' size='S' content='发送测试' onPress={() => barkTest()} />
-                    {bark.enabled ? (
-                      <Button type='text' size='S' destructive content='关闭' onPress={barkDisable} />
-                    ) : null}
-                  </View>
-                  {barkStatus ? (
-                    <CustomText
-                      fontStyle='S'
-                      style={{ color: colors.secondary, marginTop: StyleConstants.Spacing.XS }}
-                    >
-                      {barkStatus}
-                    </CustomText>
-                  ) : null}
-                </View>
-              </MenuContainer>
+
             </>
           ) : (
             <View
               style={{
-                flex: 1,
-                minHeight: '100%',
-                justifyContent: 'center',
                 alignItems: 'center',
+                paddingVertical: StyleConstants.Spacing.L,
                 paddingHorizontal: StyleConstants.Spacing.Global.PagePadding
               }}
             >
