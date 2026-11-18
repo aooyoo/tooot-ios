@@ -3,6 +3,7 @@ import { Loading } from '@components/Loading'
 import CustomText from '@components/Text'
 import { StyleConstants } from '@utils/styles/constants'
 import { useTheme } from '@utils/styles/ThemeManager'
+import { IS_IOS_26_OR_LATER } from '@utils/styles/ios26'
 import React from 'react'
 import { AccessibilityProps, Pressable, View } from 'react-native'
 
@@ -96,11 +97,11 @@ const HeaderRight: React.FC<Props> = ({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: background ? colors.backgroundOverlayDefault : undefined,
+        backgroundColor: background && !IS_IOS_26_OR_LATER ? colors.backgroundOverlayDefault : undefined,
         minHeight: 44,
         minWidth: 44,
-        marginRight: native ? -StyleConstants.Spacing.S : StyleConstants.Spacing.S,
-        ...(type === undefined && { borderRadius: 99 }),
+        marginRight: native ? (IS_IOS_26_OR_LATER ? 0 : -StyleConstants.Spacing.S) : StyleConstants.Spacing.S,
+        ...(type === undefined && !IS_IOS_26_OR_LATER && { borderRadius: 99 }),
         ...(type === 'text' && {
           paddingHorizontal: StyleConstants.Spacing.S
         })

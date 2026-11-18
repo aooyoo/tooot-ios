@@ -1,6 +1,7 @@
 import Icon, { IconName } from '@components/Icon'
 import CustomText from '@components/Text'
 import { useNavigation } from '@react-navigation/native'
+import { IS_IOS_26_OR_LATER } from '@utils/styles/ios26'
 import { StyleConstants } from '@utils/styles/constants'
 import { useTheme } from '@utils/styles/ThemeManager'
 import React from 'react'
@@ -48,11 +49,11 @@ const HeaderLeft: React.FC<Props> = ({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: background ? colors.backgroundOverlayDefault : undefined,
+        backgroundColor: background && !IS_IOS_26_OR_LATER ? colors.backgroundOverlayDefault : undefined,
         minHeight: 44,
         minWidth: 44,
-        marginLeft: native ? -StyleConstants.Spacing.S : StyleConstants.Spacing.S,
-        ...(type === undefined && {
+        marginLeft: native ? (IS_IOS_26_OR_LATER ? 0 : -StyleConstants.Spacing.S) : StyleConstants.Spacing.S,
+        ...(type === undefined && !IS_IOS_26_OR_LATER && {
           borderRadius: 99
         }),
         ...(type === 'text' && {
