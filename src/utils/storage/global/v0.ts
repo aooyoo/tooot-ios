@@ -18,6 +18,7 @@ export type GlobalV0 = {
   // boolean
   'app.auto_play_gifv'?: boolean
   'app.connect'?: boolean
+  'app.bark'?: string
 
   //// account
   // string

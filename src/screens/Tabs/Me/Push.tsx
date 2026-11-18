@@ -20,7 +20,7 @@ import * as Crypto from 'expo-crypto'
 import * as Notifications from 'expo-notifications'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, Linking, Platform, ScrollView, View } from 'react-native'
+import { AppState, Linking, Platform, ScrollView, TextInput, View } from 'react-native'
 import { fromByteArray } from 'react-native-quick-base64'
 
 export const getPushPath = ({
@@ -47,6 +47,81 @@ const TabMePush: React.FC = () => {
   const [accountAcct] = useAccountStorage.string('auth.account.acct')
   const [accountDomain] = useAccountStorage.string('auth.account.domain')
   const [accountId] = useAccountStorage.string('auth.account.id')
+  const [authToken] = useAccountStorage.string('auth.token')
+  const [barkRaw] = useGlobalStorage.string('app.bark')
+  const [barkDraft, setBarkDraft] = useState<string>('')
+  const [barkStatus, setBarkStatus] = useState<string>('')
+  const bark: { url?: string; id?: string; secret?: string; enabled?: boolean } = (() => {
+    try {
+      return JSON.parse(barkRaw || '{}')
+    } catch {
+      return {}
+    }
+  })()
+  useEffect(() => {
+    if (bark.url && !barkDraft) setBarkDraft(bark.url)
+  }, [bark.url])
+
+  const BARK_WORKER = 'https://toot-push.qiaohk.workers.dev'
+  const postJson = async (path: string, body: object) => {
+    const res = await fetch(`${BARK_WORKER}${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error((data as { error?: string }).error || `HTTP ${res.status}`)
+    return data as { id?: string; secret?: string }
+  }
+  const barkTest = async (id?: string, secret?: string) => {
+    const targetId = id || bark.id
+    const targetSecret = secret || bark.secret
+    if (!targetId || !targetSecret) {
+      setBarkStatus('还没有订阅，请先启用')
+      return
+    }
+    try {
+      const res = await fetch(`${BARK_WORKER}/test?id=${targetId}&secret=${targetSecret}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      setBarkStatus('测试推送已发出，检查 Bark 是否收到')
+    } catch (e: any) {
+      setBarkStatus(`测试失败：${e?.message || e}`)
+    }
+  }
+  const barkSubscribe = async () => {
+    const target = (barkDraft || '').trim().replace(/\/+$/, '')
+    if (!/^https:\/\//.test(target)) {
+      setBarkStatus('请填写 https:// 开头的 Bark 地址，例如 https://api.day.app/xxxxxx')
+      return
+    }
+    if (!domain || !authToken) {
+      setBarkStatus('缺少实例信息，请先登录账号')
+      return
+    }
+    setBarkStatus('正在启用…')
+    try {
+      if (bark.id && bark.secret) {
+        await postJson('/unsubscribe', { id: bark.id, secret: bark.secret }).catch(() => {})
+      }
+      const data = await postJson('/subscribe', { domain, token: authToken, bark: target })
+      setGlobalStorage(
+        'app.bark',
+        JSON.stringify({ url: target, id: data.id, secret: data.secret, enabled: true })
+      )
+      setBarkStatus('已启用，正在发送测试推送…')
+      await barkTest(data.id, data.secret)
+    } catch (e: any) {
+      setBarkStatus(`启用失败：${e?.message || e}`)
+    }
+  }
+  const barkDisable = async () => {
+    if (bark.id && bark.secret) {
+      await postJson('/unsubscribe', { id: bark.id, secret: bark.secret }).catch(() => {})
+    }
+    setGlobalStorage('app.bark', JSON.stringify({ url: bark.url || barkDraft, enabled: false }))
+    setBarkStatus('已关闭 Bark 推送')
+  }
+
 
   const appsQuery = useAppsQuery()
 
@@ -285,6 +360,58 @@ const TabMePush: React.FC = () => {
               </MenuContainer>
               <MenuContainer children={alerts()} />
               <MenuContainer children={adminAlerts()} />
+              <MenuContainer>
+                <MenuRow
+                  title='Bark 推送'
+                  description='自签名安装没有 APNs，用 Bark 接收 Mastodon 通知（由 Worker 每分钟轮询）'
+                  switchValue={!!bark.enabled}
+                  switchOnValueChange={async () => {
+                    if (bark.enabled) {
+                      await barkDisable()
+                    } else {
+                      await barkSubscribe()
+                    }
+                  }}
+                />
+                <View
+                  style={{
+                    paddingHorizontal: StyleConstants.Spacing.Global.PagePadding,
+                    paddingBottom: StyleConstants.Spacing.M
+                  }}
+                >
+                  <TextInput
+                    value={barkDraft}
+                    onChangeText={setBarkDraft}
+                    placeholder='https://api.day.app/你的key'
+                    placeholderTextColor={colors.secondary}
+                    autoCapitalize='none'
+                    autoCorrect={false}
+                    keyboardType='url'
+                    style={{
+                      color: colors.primaryDefault,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.backgroundOverlayDefault,
+                      paddingVertical: StyleConstants.Spacing.S,
+                      marginBottom: StyleConstants.Spacing.S
+                    }}
+                  />
+                  <View style={{ flexDirection: 'row', gap: StyleConstants.Spacing.S }}>
+                    <Button type='text' size='S' content='保存并启用' onPress={barkSubscribe} />
+                    <Button type='text' size='S' content='发送测试' onPress={() => barkTest()} />
+                    {bark.enabled ? (
+                      <Button type='text' size='S' destructive content='关闭' onPress={barkDisable} />
+                    ) : null}
+                  </View>
+                  {barkStatus ? (
+                    <CustomText
+                      fontStyle='S'
+                      style={{ color: colors.secondary, marginTop: StyleConstants.Spacing.XS }}
+                    >
+                      {barkStatus}
+                    </CustomText>
+                  ) : null}
+                </View>
+              </MenuContainer>
             </>
           ) : (
             <View
